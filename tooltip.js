@@ -3,17 +3,17 @@ const TooltipAttributes = {
 };
 
 class Tooltip extends HTMLElement {
-  _tooltipContainer;
   _tooltipText;
   _tooltipIcon;
+  _isVisible;
 
   //Basic initializations
   constructor() {
     super();
     this.attachShadow({ mode: "open" });
     this.shadowRoot.innerHTML = `<slot>Some default</slot><span>(?)</span>`;
-    this._tooltipContainer = document.createElement("div");
     this._tooltipText = "";
+    this._isVisible = false;
   }
 
   //Here the component is loaded into de DOM and it's possible to work with it
@@ -21,10 +21,8 @@ class Tooltip extends HTMLElement {
     if (this.hasAttribute(TooltipAttributes.text))
       this._tooltipText = this._text;
     this._addTooltipListeners();
+    this._render();
   }
-
-  //Element detached from DOM, cleanup work
-  disconnectedCallback() {}
 
   //Observed attribute updated, update data + DOM
   attributeChangedCallback(name, oldValue, newValue) {
@@ -33,6 +31,12 @@ class Tooltip extends HTMLElement {
         case TooltipAttributes.text:
           this._tooltipText = newValue;
       }
+  }
+
+  //Element detached from DOM, cleanup work
+  disconnectedCallback() {
+    this._tooltipIcon.removeEventListener("mouseenter", this._showTooltip);
+    this._tooltipIcon.removeEventListener("mouseleave", this._hideTooltip);
   }
 
   static get observedAttributes() {
@@ -57,12 +61,23 @@ class Tooltip extends HTMLElement {
   }
 
   _showTooltip() {
-    this._tooltipContainer.textContent = this._tooltipText;
-    this.shadowRoot.appendChild(this._tooltipContainer);
+    this._isVisible = true;
+    this._render();
+  }
+  _hideTooltip() {
+    this._isVisible = false;
+    this._render();
   }
 
-  _hideTooltip() {
-    this.shadowRoot.removeChild(this._tooltipContainer);
+  _render() {
+    let tooltipContainer = this.shadowRoot.querySelector("div");
+    if (this._isVisible) {
+      tooltipContainer = document.createElement("div");
+      tooltipContainer.textContent = this._tooltipText;
+      this.shadowRoot.appendChild(tooltipContainer);
+    } else if (tooltipContainer) {
+      this.shadowRoot.removeChild(tooltipContainer);
+    }
   }
 }
 
