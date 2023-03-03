@@ -1,3 +1,7 @@
+const TooltipAttributes = {
+  text: "text",
+};
+
 class Tooltip extends HTMLElement {
   _tooltipContainer;
   _tooltipText;
@@ -14,7 +18,8 @@ class Tooltip extends HTMLElement {
 
   //Here the component is loaded into de DOM and it's possible to work with it
   connectedCallback() {
-    if (this.hasAttribute("text")) this._tooltipText = this._text;
+    if (this.hasAttribute(TooltipAttributes.text))
+      this._tooltipText = this._text;
     this._addTooltipListeners();
   }
 
@@ -22,10 +27,20 @@ class Tooltip extends HTMLElement {
   disconnectedCallback() {}
 
   //Observed attribute updated, update data + DOM
-  attributeChangedCallback() {}
+  attributeChangedCallback(name, oldValue, newValue) {
+    if (oldValue !== newValue)
+      switch (name) {
+        case TooltipAttributes.text:
+          this._tooltipText = newValue;
+      }
+  }
+
+  static get observedAttributes() {
+    return [TooltipAttributes.text];
+  }
 
   get _text() {
-    return this.getAttribute("text");
+    return this.getAttribute(TooltipAttributes.text);
   }
 
   _addTooltipListeners() {
